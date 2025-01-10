@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Plan Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --background-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            opacity: 0.1;
+            border-radius: 0 0 0 100%;
+            z-index: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header h1 i {
+            color: var(--primary-color);
+            animation: bounce 2s infinite;
+        }
+
+        .quote {
+            font-style: italic;
+            color: #666;
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid var(--primary-color);
+            background: var(--background-color);
+            border-radius: 0 10px 10px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        select, button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            background: var(--background-color);
+            color: var(--text-color);
+            min-width: 200px;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .week {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .week::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, transparent 50%, rgba(46, 204, 113, 0.1) 50%);
+            border-radius: 0 0 15px 0;
+        }
+
+        .week h2 {
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .week h2 i {
+            font-size: 0.8em;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: var(--background-color);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card i {
+            font-size: 2em;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .day {
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day:hover {
+            transform: translateX(5px);
+            border-color: var(--primary-color);
+        }
+
+        .day h3 {
+            padding: 15px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--background-color);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .calorie-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .session {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .session:last-child {
+            border-bottom: none;
+        }
+
+        .session h4 {
+            color: var(--secondary-color);
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .session-details div {
+            padding: 4px 8px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .equipment-section {
+            margin-top: 8px;
+        }
+
+        .equipment-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .equipment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .equipment-item {
+            background-color: #e9ecef;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.85em;
+            color: #495057;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .equipment-item:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .exercise-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .exercise-info p {
+            margin: 5px 0;
+        }
+        
+        .exercise-info a {
+            color: #4CAF50;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .exercise-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .exercise-description {
+            margin: 8px 0;
+            color: #e0e0e0;
+        }
+        
+        .toggle-description {
+            background: none;
+            border: none;
+            color: #4CAF50;
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 0.9em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .toggle-description:hover {
+            color: #81C784;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: var(--text-color);
+        }
+
+        .loading i {
+            font-size: 2em;
+            color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header animate__animated animate__fadeIn">
+            <h1><i class="fas fa-running"></i> Training Plan Viewer</h1>
+            <div class="quote" id="quote"></div>
+        </div>
+
+        <div class="controls animate__animated animate__slideInDown">
+            <select id="monthSelect">
+                <option value="january">January 2025</option>
+                <option value="february">February 2025</option>
+                <option value="march">March 2025</option>
+                <option value="april">April 2025</option>
+            </select>
+            <button onclick="loadTrainingData()">
+                <i class="fas fa-sync-alt"></i> Load Plan
+            </button>
+        </div>
+
+        <div id="trainingContent"></div>
+    </div>
+
+    <script>
+        const quotes = [
+            "The only bad workout is the one that didn't happen.",
+            "Your body can stand almost anything. It's your mind you have to convince.",
+            "The difference between try and triumph is just a little umph!",
+            "Success is walking from failure to failure with no loss of enthusiasm.",
+            "The hard days are the best because that's when champions are made.",
+            "Don't count the days, make the days count.",
+            "The only person you are destined to become is the person you decide to be.",
+            "Believe you can and you're halfway there."
+        ];
+
+        // Set random quote on load
+        document.getElementById('quote').innerHTML = `<i class="fas fa-quote-left"></i> ${quotes[Math.floor(Math.random() * quotes.length)]} <i class="fas fa-quote-right"></i>`;
+
+        function formatMetric(value, type) {
+            if (type === 'calories') {
+                const num = parseInt(value) || 0;
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            if (type === 'weight') {
+                const num = parseFloat(value) || 0;
+                return num.toFixed(1);
+            }
+            return value || 0;
+        }
+
+        function getDayType(calories) {
+            calories = parseInt(calories) || 0;
+            if (calories <= 1900) return 'Recovery Day';
+            if (calories <= 2100) return 'Medium Intensity Day';
+            return 'High Intensity Day';
+        }
+
+        function getDayTypeClass(calories) {
+            calories = parseInt(calories) || 0;
+            if (calories <= 1900) return 'recovery';
+            if (calories <= 2100) return 'medium-intensity';
+            return 'high-intensity';
+        }
+
+        function parseMarkdown(markdown) {
+            const weeks = [];
+            let currentWeek = null;
+            let currentDay = null;
+            let currentSession = null;
+            
+            const lines = markdown.split('\n');
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // Week start
+                if (line.startsWith('## Week')) {
+                    if (currentWeek) {
+                        weeks.push(currentWeek);
+                    }
+                    currentWeek = {
+                        week_number: parseInt(line.match(/Week \d+/)[0].split(' ')[1]) || 0,
+                        metrics: {
+                            daily_calories: 0,
+                            avg_weight: 0,
+                            total_sessions: 0
+                        },
+                        days: []
+                    };
+                }
+                // Day start
+                else if (line.startsWith('**') && line.includes(',')) {
+                    if (currentDay) {
+                        if (currentSession) {
+                            currentDay.sessions.push(currentSession);
+                            currentSession = null;
+                        }
+                        currentWeek.days.push(currentDay);
+                    }
+                    const dayMatch = line.match(/\*\*([^,]+), ([^*]+)\*\*/);
+                    if (dayMatch) {
+                        currentDay = {
+                            day: dayMatch[1].trim(),
+                            date: dayMatch[2].trim(),
+                            calories: 0,
+                            weight: 0,
+                            sessions: []
+                        };
+                    }
+                }
+                // Caloric target
+                else if (line.startsWith("TODAY'S CALORIC TARGET:")) {
+                    const calorieMatch = line.match(/(\d+,?\d*)/);
+                    if (calorieMatch && currentDay) {
+                        currentDay.calories = parseInt(calorieMatch[0].replace(',', '')) || 0;
+                    }
+                }
+                // Weight
+                else if (line.startsWith('Current weight:')) {
+                    const weightMatch = line.match(/(\d+\.\d+)/);
+                    if (weightMatch && currentDay) {
+                        currentDay.weight = parseFloat(weightMatch[0]) || 0;
+                    }
+                }
+                // Session start
+                else if (line.startsWith('- ')) {
+                    if (currentSession && currentDay) {
+                        currentDay.sessions.push(currentSession);
+                    }
+                    currentSession = {
+                        name: line.replace('- ', ''),
+                        duration: '',
+                        location: '',
+                        equipment: ''
+                    };
+                }
+                // Session details
+                else if (line.startsWith('  * ')) {
+                    if (!currentSession || !currentDay) continue;
+                    
+                    const detail = line.replace('  * ', '');
+                    if (detail.startsWith('Duration:')) {
+                        const durationMatch = detail.match(/(\d+)/);
+                        if (durationMatch) {
+                            currentSession.duration = durationMatch[0];
+                        }
+                    }
+                    else if (detail.startsWith('Location:')) {
+                        currentSession.location = detail.replace('Location: ', '');
+                    }
+                    else if (detail.startsWith('Equipment:')) {
+                        currentSession.equipment = detail.replace('Equipment: ', '')
+                            .replace(/[\[\]]/g, ''); // Remove square brackets
+                    }
+                    else if (detail.startsWith('Estimated caloric burn:')) {
+                        const calories = detail.match(/(\d+)-(\d+)/);
+                        if (calories) {
+                            const avgCalories = Math.round((parseInt(calories[1]) + parseInt(calories[2])) / 2);
+                            if (!isNaN(avgCalories)) {
+                                currentDay.calories = (currentDay.calories || 0) + avgCalories;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Add last session and day if they exist
+            if (currentSession && currentDay) {
+                currentDay.sessions.push(currentSession);
+            }
+            if (currentDay && currentWeek) {
+                currentWeek.days.push(currentDay);
+            }
+            if (currentWeek) {
+                weeks.push(currentWeek);
+            }
+            
+            // Calculate metrics for each week
+            weeks.forEach(week => {
+                let totalCalories = 0;
+                let totalWeight = 0;
+                let weightCount = 0;
+                let totalSessions = 0;
+                
+                week.days.forEach(day => {
+                    if (day.calories) totalCalories += parseInt(day.calories) || 0;
+                    if (day.weight) {
+                        const weight = parseFloat(day.weight);
+                        if (!isNaN(weight)) {
+                            totalWeight += weight;
+                            weightCount++;
+                        }
+                    }
+                    totalSessions += day.sessions.length;
+                });
+                
+                const avgWeight = weightCount > 0 ? (totalWeight / weightCount) : 0;
+                week.metrics = {
+                    daily_calories: Math.round(totalCalories / (week.days.length || 1)),
+                    avg_weight: avgWeight,
+                    total_sessions: totalSessions
+                };
+            });
+            
+            return weeks;
+        }
+
+        const exerciseInfo = {
+            'Run streak minimum': {
+                description: 'A short, easy run to maintain running consistency. Focus on proper form and keeping the intensity very low.',
+                link: 'https://www.runnersworld.com/training/a20803505/streak-running-basics/',
+                tips: 'Keep it slow and easy, focus on form over speed.'
+            },
+            'Active recovery': {
+                description: 'Light activities to promote recovery while maintaining movement. Can include walking, stretching, and light mobility work.',
+                link: 'https://www.trainingpeaks.com/blog/the-importance-of-active-recovery/',
+                tips: 'Listen to your body, stay at a very low intensity.'
+            },
+            'Technical training': {
+                description: 'Focused practice on orienteering techniques, including map reading, compass work, and route choice exercises.',
+                link: 'https://www.britishorienteering.org.uk/training_tips',
+                tips: 'Focus on accuracy over speed, practice various techniques.'
+            },
+            'Long technical training': {
+                description: 'Extended orienteering session combining endurance with technical skills. Emphasis on maintaining technique while managing fatigue.',
+                link: 'https://www.britishorienteering.org.uk/training_tips',
+                tips: 'Maintain form even when tired, practice navigation under fatigue.'
+            },
+            'Strength training': {
+                description: 'Full-body workout focusing on key muscle groups for running and orienteering. Includes both upper and lower body exercises.',
+                link: 'https://www.runnersworld.com/training/g20862002/basic-strength-training/',
+                tips: 'Focus on proper form, gradually increase weights.'
+            },
+            'Intervals': {
+                description: 'High-intensity running segments alternated with recovery periods. Improves speed, endurance, and running economy.',
+                link: 'https://www.runnersworld.com/training/a20801301/interval-training-workouts/',
+                tips: 'Maintain good form during high-intensity portions, full recovery between sets.'
+            },
+            'Core workout': {
+                description: 'Focused exercises to strengthen the core muscles, essential for stability and power transfer while running.',
+                link: 'https://www.runnersworld.com/training/g20862001/core-exercises-for-runners/',
+                tips: 'Quality over quantity, focus on engaging the core throughout.'
+            }
+        };
+
+        function getExerciseInfo(exerciseName) {
+            // Try to find an exact match first
+            let info = exerciseInfo[exerciseName];
+            
+            // If no exact match, try to find a partial match
+            if (!info) {
+                const exerciseKey = Object.keys(exerciseInfo).find(key => 
+                    exerciseName.toLowerCase().includes(key.toLowerCase())
+                );
+                info = exerciseInfo[exerciseKey];
+            }
+            
+            return info;
+        }
+
+        function createExerciseInfoHTML(exercise) {
+            const info = getExerciseInfo(exercise.name);
+            if (!info) return '';
+            
+            return `
+                <div class="exercise-info">
+                    <button class="toggle-description" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                        <i class="fas fa-info-circle"></i> Show Exercise Details
+                    </button>
+                    <div class="exercise-description" style="display: none;">
+                        <p>${info.description}</p>
+                        <p><strong>Tips:</strong> ${info.tips}</p>
+                        <a href="${info.link}" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Learn more
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createWeekHTML(weekData, index) {
+            const metrics = weekData.metrics;
+            const animationDelay = index * 0.2;
+            
+            return `
+                <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
+                    <h2><i class="fas fa-calendar-week"></i> Week ${weekData.week_number}</h2>
+                    <div class="metrics">
+                        <div class="metric-card">
+                            <i class="fas fa-fire"></i>
+                            <h3>Daily Caloric Target</h3>
+                            <h2>${formatMetric(metrics.daily_calories, 'calories')} kcal</h2>
+                        </div>
+                        <div class="metric-card">
+                            <i class="fas fa-weight"></i>
+                            <h3>Average Weight</h3>
+                            <h2>${formatMetric(metrics.avg_weight, 'weight')} kg</h2>
+                        </div>
+                        <div class="metric-card">
+                            <i class="fas fa-dumbbell"></i>
+                            <h3>Total Sessions</h3>
+                            <h2>${metrics.total_sessions}</h2>
+                        </div>
+                    </div>
+                    ${weekData.days.map(day => `
+                        <div class="day" onclick="this.querySelector('.sessions').style.display = this.querySelector('.sessions').style.display === 'none' ? 'block' : 'none'">
+                            <h3>
+                                <span><i class="far fa-calendar-alt"></i> ${day.day} - ${day.date}</span>
+                                <span class="calorie-badge"><i class="fas fa-fire-alt"></i> ${formatMetric(day.calories, 'calories')} kcal</span>
+                            </h3>
+                            <div class="weight"><i class="fas fa-weight"></i> Weight: ${formatMetric(day.weight, 'weight')} kg</div>
+                            <div class="day-type ${getDayTypeClass(day.calories)}">
+                                <i class="fas fa-chart-line"></i> ${getDayType(day.calories)}
+                            </div>
+                            <div class="sessions" style="display: none;">
+                                ${day.sessions.map(session => `
+                                    <div class="session">
+                                        <h4><i class="fas fa-flag"></i> ${session.name}</h4>
+                                        <div class="session-details">
+                                            ${session.duration ? `<div><i class="far fa-clock"></i> ${session.duration} min</div>` : ''}
+                                            ${session.location ? `<div><i class="fas fa-map-marker-alt"></i> ${session.location}</div>` : ''}
+                                        </div>
+                                        ${session.equipment ? `
+                                            <div class="equipment-section">
+                                                <div class="equipment-title"><i class="fas fa-tools"></i> Equipment:</div>
+                                                <div class="equipment-list">
+                                                    ${session.equipment.replace(/[\[\]]/g, '').split(',').map(item => `
+                                                        <div class="equipment-item"><i class="fas fa-check"></i>${item.trim()}</div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        ${createExerciseInfoHTML(session)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function loadTrainingData() {
+            const month = document.getElementById('monthSelect').value;
+            const contentDiv = document.getElementById('trainingContent');
+            
+            contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading training plan...</div>';
+            
+            // Load markdown file directly
+            fetch(`${month}_2025.md`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Markdown data loaded:', data.substring(0, 200) + '...'); // Debug log
+                    const weeks = parseMarkdown(data);
+                    console.log('Parsed weeks:', weeks); // Debug log
+                    if (weeks.length === 0) {
+                        throw new Error('No weeks parsed from the markdown file');
+                    }
+                    contentDiv.innerHTML = weeks.map((week, index) => createWeekHTML(week, index)).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading training plan:', error);
+                    contentDiv.innerHTML = `
+                        <div class="error" style="padding: 20px; background-color: #fee; border-radius: 10px; color: #c33;">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Error loading training plan</h3>
+                            <p>${error.message}</p>
+                            <p>Please check the browser console for more details.</p>
+                        </div>`;
+                });
+        }
+
+        // Load initial data
+        loadTrainingData();
+    </script>
+</body>
+</html>
