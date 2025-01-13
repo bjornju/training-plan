@@ -1,6 +1,6 @@
 # April 2025 Progress
 
-## Week 14 (Mar 31-Apr 6) | Target: 71.11 kg
+## 14 (Mar 31-Apr 6) | Target: 71.11 kg
 
 ### Tue Apr 1 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -26,7 +26,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 15 (Apr 7-13) | Target: 71.11 kg
+## 15 (Apr 7-13) | Target: 71.11 kg
 
 ### Mon Apr 7 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -56,7 +56,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 16 (Apr 14-20) | Target: 71.11 kg
+## 16 (Apr 14-20) | Target: 71.11 kg
 
 ### Mon Apr 14 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -86,7 +86,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 17 (Apr 21-27) | Target: 71.11 kg
+## 17 (Apr 21-27) | Target: 71.11 kg
 
 ### Mon Apr 21 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -116,7 +116,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 18 (Apr 28-May 4) | Target: 71.11 kg
+## 18 (Apr 28-May 4) | Target: 71.11 kg
 
 ### Mon Apr 28 | Weight: ___ kg | Calories: ___
 Run Streak: _

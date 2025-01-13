@@ -66,12 +66,15 @@ def parse_training_file(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
     
-    # Extract weeks using regex
-    weeks = re.split(r'## Week \d+', content)[1:]  # Skip the header
+    # Extract weeks using regex, but preserve the week header
+    week_pattern = r'## Week (\d+)'
+    weeks = re.split(week_pattern, content)[1:]  # Skip the header
     parsed_weeks = []
     
-    for week in weeks:
-        days = re.split(r'\*\*[A-Za-z]+, [A-Za-z]+ \d+\*\*', week)[1:]
+    for i in range(0, len(weeks), 2):  # Step by 2 since we have number and content
+        week_num = weeks[i]
+        week_content = weeks[i + 1] if i + 1 < len(weeks) else ""
+        days = re.split(r'\*\*[A-Za-z]+, [A-Za-z]+ \d+\*\*', week_content)[1:]
         week_data = []
         
         for day in days:
@@ -87,7 +90,7 @@ def parse_training_file(file_path):
             }
             week_data.append(day_data)
         
-        parsed_weeks.append(week_data)
+        parsed_weeks.append((week_num, week_data))
     
     return parsed_weeks
 
@@ -106,7 +109,7 @@ def create_weekly_metrics(week_data):
 
 def display_week(week_data, week_number):
     """Display a single week's training data."""
-    st.markdown(f"### Week {week_number}")
+    st.markdown(f"### {week_number}")  # Remove the extra "Week" here
     
     metrics = create_weekly_metrics(week_data)
     
@@ -194,7 +197,7 @@ def main():
         
         # Display selected weeks
         for week_num in range(week_range[0]-1, week_range[1]):
-            display_week(weeks[week_num], week_num + 1)
+            display_week(weeks[week_num][1], weeks[week_num][0])
             st.markdown("---")
 
 if __name__ == "__main__":

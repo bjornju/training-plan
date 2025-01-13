@@ -1,6 +1,6 @@
 # January 2025 Progress
 
-## Week 3 (Jan 13-19) | Target: 73.99 kg
+## Progress Week 3 (Jan 13-19) | Target: 73.99 kg
 
 ### Mon Jan 13 | Weight: 74.40 kg | Calories: 1,900
 Run Streak: +
@@ -30,7 +30,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 4 (Jan 20-26) | Target: 73.18 kg
+## Progress Week 4 (Jan 20-26) | Target: 73.18 kg
 
 ### Mon Jan 20 | Weight: ___ kg | Calories: ___
 Run Streak: _

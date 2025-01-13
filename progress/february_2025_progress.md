@@ -1,6 +1,6 @@
 # February 2025 Progress
 
-## Week 5 (Jan 27-Feb 2) | Target: 72.57 kg
+## 5 (Jan 27-Feb 2)
 
 ### Mon Jan 27 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -30,7 +30,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 6 (Feb 3-9) | Target: 72.57 kg
+## 6 (Feb 3-9)
 
 ### Mon Feb 3 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -60,7 +60,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 7 (Feb 10-16) | Target: 72.57 kg
+## 7 (Feb 10-16)
 
 ### Mon Feb 10 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -90,7 +90,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 8 (Feb 17-23) | Target: 72.57 kg
+## 8 (Feb 17-23)
 
 ### Mon Feb 17 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -120,7 +120,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 9 (Feb 24-Mar 2) | Target: 72.57 kg
+## 9 (Feb 24-Mar 2)
 
 ### Mon Feb 24 | Weight: ___ kg | Calories: ___
 Run Streak: _

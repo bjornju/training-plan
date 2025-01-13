@@ -58,15 +58,22 @@ def parse_training_file(file_path):
         content = f.read()
     
     weeks = []
-    week_pattern = r'## Week (\d+)[^\n]*\n(.*?)(?=## Week|\Z)'
+    # Extract week number and title separately
+    week_pattern = r'## (?:Week )?(\d+)[^\n]*\n(.*?)(?=## (?:Week )?|\Z)'
     week_matches = re.finditer(week_pattern, content, re.DOTALL)
     
     for match in week_matches:
         week_num = match.group(1)
         week_content = match.group(2)
         
+        # Extract the full title from the original content
+        title_pattern = fr'## (?:Week )?{week_num}([^\n]*)'
+        title_match = re.search(title_pattern, match.group(0))
+        full_title = f"{week_num}{title_match.group(1) if title_match else ''}"
+        
         week_data = {
             'week_number': int(week_num),
+            'title': full_title,  # Use the full title instead of just the number
             'days': parse_training_week(week_content)
         }
         

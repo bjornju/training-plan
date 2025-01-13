@@ -1,6 +1,6 @@
 # March 2025 Progress
 
-## Week 10 (Mar 3-9) | Target: 71.84 kg
+## 10 (Mar 3-9)
 
 ### Mon Mar 3 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -30,7 +30,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 11 (Mar 10-16) | Target: 71.84 kg
+## 11 (Mar 10-16)
 
 ### Mon Mar 10 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -60,7 +60,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 12 (Mar 17-23) | Target: 71.84 kg
+## 12 (Mar 17-23)
 
 ### Mon Mar 17 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -90,7 +90,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 13 (Mar 24-30) | Target: 71.84 kg
+## 13 (Mar 24-30)
 
 ### Mon Mar 24 | Weight: ___ kg | Calories: ___
 Run Streak: _
@@ -120,7 +120,7 @@ Long Technical: _
 Run Streak: _
 Active Recovery: _
 
-## Week 14 (Mar 31-Apr 6) | Target: 71.84 kg
+## 14 (Mar 31-Apr 6)
 
 ### Mon Mar 31 | Weight: ___ kg | Calories: ___
 Run Streak: _

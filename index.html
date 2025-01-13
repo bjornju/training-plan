@@ -732,9 +732,12 @@
             const metrics = weekData.metrics;
             const animationDelay = index * 0.2;
             
+            // If title already has "Week", use it as is, otherwise add "Week"
+            const displayTitle = weekData.title.includes('Week') ? weekData.title : `Week ${weekData.title}`;
+            
             return `
                 <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
-                    <h2><i class="fas fa-calendar-week"></i> Week ${weekData.title}</h2>
+                    <h2><i class="fas fa-calendar-week"></i> ${displayTitle}</h2>
                     <div class="metrics">
                         <div class="metric-card">
                             <i class="fas fa-fire"></i>
