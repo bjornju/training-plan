@@ -212,74 +212,137 @@
         }
 
         .session {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 15px 0;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .session-main {
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
         }
 
-        .session:last-child {
-            border-bottom: none;
+        .session-header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: center;
         }
 
-        .session h4 {
-            color: var(--secondary-color);
-            margin: 0 0 10px 0;
+        .session-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .session-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .session-duration {
+            background: #e3f2fd;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #1976d2;
+            white-space: nowrap;
+        }
+
+        .session-location {
+            background: #f5f5f5;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .subsections {
+            padding: 15px;
+        }
+
+        .subsection {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .subsection-header {
+            padding: 12px 15px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subsection-title {
+            font-weight: bold;
+            color: #333;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .session-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 10px 0;
+        .subsection-duration {
+            font-weight: normal;
+            color: #1976d2;
         }
 
-        .session-details div {
-            padding: 4px 8px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            font-size: 0.9em;
+        .subsection-content {
+            padding: 15px;
+        }
+
+        .subsection-details {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .subsection-details li {
+            padding: 5px 0;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+        }
+
+        .subsection-details li i {
+            color: var(--primary-color);
         }
 
         .equipment-section {
-            margin-top: 8px;
+            margin-top: 15px;
         }
 
-        .equipment-title {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .equipment-header {
+            background: #f5f5f5;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
         }
 
-        .equipment-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
+        .equipment-content {
+            display: none;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
         }
 
-        .equipment-item {
-            background-color: #e9ecef;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 0.85em;
-            color: #495057;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
+        .equipment-content.expanded {
+            display: block;
         }
 
-        .equipment-item:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: translateY(-1px);
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
         }
 
         .exercise-info {
@@ -439,146 +502,167 @@
         }
 
         function parseMarkdown(markdown) {
+            const lines = markdown.split('\n');
             const weeks = [];
             let currentWeek = null;
             let currentDay = null;
             let currentSession = null;
-            
-            const lines = markdown.split('\n');
-            
+            let parsingStructure = false;
+            let currentStructureItem = null;
+
             for (let line of lines) {
-                line = line.trim();
-                
                 // Week start
                 if (line.startsWith('## Week')) {
-                    if (currentWeek) {
-                        weeks.push(currentWeek);
-                    }
                     currentWeek = {
-                        week_number: parseInt(line.match(/Week \d+/)[0].split(' ')[1]) || 0,
-                        metrics: {
-                            daily_calories: 0,
-                            avg_weight: 0,
-                            total_sessions: 0
-                        },
+                        title: line.substring(3).trim(),
+                        metrics: {},
                         days: []
                     };
+                    weeks.push(currentWeek);
+                }
+                // Week metrics
+                else if (line.startsWith('Target weight')) {
+                    const match = line.match(/Target weight.*: ([\d.]+) kg/);
+                    if (match) {
+                        currentWeek.metrics.targetWeight = parseFloat(match[1]);
+                    }
                 }
                 // Day start
-                else if (line.startsWith('**') && line.includes(',')) {
-                    if (currentDay) {
-                        if (currentSession) {
-                            currentDay.sessions.push(currentSession);
-                            currentSession = null;
-                        }
-                        currentWeek.days.push(currentDay);
-                    }
-                    const dayMatch = line.match(/\*\*([^,]+), ([^*]+)\*\*/);
-                    if (dayMatch) {
-                        currentDay = {
-                            day: dayMatch[1].trim(),
-                            date: dayMatch[2].trim(),
-                            calories: 0,
-                            weight: 0,
-                            sessions: []
-                        };
+                else if (line.startsWith('**') && line.includes('day')) {
+                    currentDay = {
+                        day: line.replace(/\*\*/g, '').split(',')[0].trim(),
+                        date: line.replace(/\*\*/g, '').split(',')[1].trim(),
+                        sessions: [],
+                        calories: 0,
+                        weight: 0
+                    };
+                    currentWeek.days.push(currentDay);
+                    parsingStructure = false;
+                }
+                // Day caloric target
+                else if (line.includes('CALORIC TARGET:')) {
+                    const match = line.match(/CALORIC TARGET: ([\d,]+)/);
+                    if (match) {
+                        currentDay.calories = parseInt(match[1].replace(',', ''));
                     }
                 }
-                // Caloric target
-                else if (line.startsWith("TODAY'S CALORIC TARGET:")) {
-                    const calorieMatch = line.match(/(\d+,?\d*)/);
-                    if (calorieMatch && currentDay) {
-                        currentDay.calories = parseInt(calorieMatch[0].replace(',', '')) || 0;
-                    }
-                }
-                // Weight
-                else if (line.startsWith('Current weight:')) {
-                    const weightMatch = line.match(/(\d+\.\d+)/);
-                    if (weightMatch && currentDay) {
-                        currentDay.weight = parseFloat(weightMatch[0]) || 0;
+                // Day weight
+                else if (line.includes('Current weight:')) {
+                    const match = line.match(/Current weight: ([\d.]+)/);
+                    if (match) {
+                        currentDay.weight = parseFloat(match[1]);
                     }
                 }
                 // Session start
                 else if (line.startsWith('- ')) {
-                    if (currentSession && currentDay) {
-                        currentDay.sessions.push(currentSession);
-                    }
                     currentSession = {
-                        name: line.replace('- ', ''),
+                        name: line.substring(2).trim(),
                         duration: '',
                         location: '',
-                        equipment: ''
+                        equipment: '',
+                        structure: []
                     };
+                    currentDay.sessions.push(currentSession);
+                    parsingStructure = false;
+                }
+                // Session structure header
+                else if (line.includes('Session structure:')) {
+                    parsingStructure = true;
+                    currentSession.structure = [];
+                }
+                // Structure item
+                else if (parsingStructure && line.match(/^\s+\d+\./)) {
+                    const match = line.match(/^\s+(\d+)\.\s+(.*?)\s*\((\d+)\s*min\):/);
+                    if (match) {
+                        currentStructureItem = {
+                            name: match[2].trim(),
+                            duration: match[3],
+                            details: []
+                        };
+                        currentSession.structure.push(currentStructureItem);
+                    }
+                }
+                // Structure item details
+                else if (parsingStructure && line.match(/^\s+-/)) {
+                    if (currentStructureItem) {
+                        currentStructureItem.details.push(line.replace(/^\s+-\s*/, '').trim());
+                    }
                 }
                 // Session details
                 else if (line.startsWith('  * ')) {
-                    if (!currentSession || !currentDay) continue;
-                    
-                    const detail = line.replace('  * ', '');
+                    const detail = line.substring(4).trim();
                     if (detail.startsWith('Duration:')) {
-                        const durationMatch = detail.match(/(\d+)/);
-                        if (durationMatch) {
-                            currentSession.duration = durationMatch[0];
-                        }
+                        currentSession.duration = detail.replace('Duration:', '').trim().replace('~', '');
                     }
                     else if (detail.startsWith('Location:')) {
-                        currentSession.location = detail.replace('Location: ', '');
+                        currentSession.location = detail.replace('Location:', '').trim();
                     }
                     else if (detail.startsWith('Equipment:')) {
-                        currentSession.equipment = detail.replace('Equipment: ', '')
-                            .replace(/[\[\]]/g, ''); // Remove square brackets
-                    }
-                    else if (detail.startsWith('Estimated caloric burn:')) {
-                        const calories = detail.match(/(\d+)-(\d+)/);
-                        if (calories) {
-                            const avgCalories = Math.round((parseInt(calories[1]) + parseInt(calories[2])) / 2);
-                            if (!isNaN(avgCalories)) {
-                                currentDay.calories = (currentDay.calories || 0) + avgCalories;
-                            }
-                        }
+                        currentSession.equipment = detail.replace('Equipment:', '').trim()
+                            .replace('[', '').replace(']', '');
                     }
                 }
             }
             
-            // Add last session and day if they exist
-            if (currentSession && currentDay) {
-                currentDay.sessions.push(currentSession);
-            }
-            if (currentDay && currentWeek) {
-                currentWeek.days.push(currentDay);
-            }
-            if (currentWeek) {
-                weeks.push(currentWeek);
-            }
-            
-            // Calculate metrics for each week
-            weeks.forEach(week => {
-                let totalCalories = 0;
-                let totalWeight = 0;
-                let weightCount = 0;
-                let totalSessions = 0;
-                
-                week.days.forEach(day => {
-                    if (day.calories) totalCalories += parseInt(day.calories) || 0;
-                    if (day.weight) {
-                        const weight = parseFloat(day.weight);
-                        if (!isNaN(weight)) {
-                            totalWeight += weight;
-                            weightCount++;
-                        }
-                    }
-                    totalSessions += day.sessions.length;
-                });
-                
-                const avgWeight = weightCount > 0 ? (totalWeight / weightCount) : 0;
-                week.metrics = {
-                    daily_calories: Math.round(totalCalories / (week.days.length || 1)),
-                    avg_weight: avgWeight,
-                    total_sessions: totalSessions
-                };
-            });
-            
             return weeks;
+        }
+
+        function parseSessionStructure(session) {
+            if (!session.structure) return '';
+            
+            return `
+                <div class="subsections">
+                    ${session.structure.map((subsection, index) => `
+                        <div class="subsection">
+                            <div class="subsection-header">
+                                <div class="subsection-title">
+                                    <i class="fas fa-tasks"></i>
+                                    ${index + 1}. ${subsection.name}
+                                    <span class="subsection-duration">
+                                        <i class="far fa-clock"></i> ${subsection.duration} min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="subsection-content">
+                                <ul class="subsection-details">
+                                    ${subsection.details.map(detail => `
+                                        <li><i class="fas fa-chevron-right"></i>${detail}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function createExerciseInfoHTML(session) {
+            const info = getExerciseInfo(session.name);
+            if (!info) return '';
+            
+            return `
+                <div class="exercise-info">
+                    <p>${info.description}</p>
+                    <p><strong>Tips:</strong> ${info.tips}</p>
+                    <a href="${info.link}" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Learn more
+                    </a>
+                </div>
+            `;
+        }
+
+        function getExerciseInfo(exerciseName) {
+            // Try to find an exact match first
+            let info = exerciseInfo[exerciseName];
+            
+            // If no exact match, try to find a partial match
+            if (!info) {
+                const key = Object.keys(exerciseInfo).find(k => 
+                    exerciseName.toLowerCase().includes(k.toLowerCase()));
+                info = exerciseInfo[key];
+            }
+            
+            return info;
         }
 
         const exerciseInfo = {
@@ -619,48 +703,13 @@
             }
         };
 
-        function getExerciseInfo(exerciseName) {
-            // Try to find an exact match first
-            let info = exerciseInfo[exerciseName];
-            
-            // If no exact match, try to find a partial match
-            if (!info) {
-                const exerciseKey = Object.keys(exerciseInfo).find(key => 
-                    exerciseName.toLowerCase().includes(key.toLowerCase())
-                );
-                info = exerciseInfo[exerciseKey];
-            }
-            
-            return info;
-        }
-
-        function createExerciseInfoHTML(exercise) {
-            const info = getExerciseInfo(exercise.name);
-            if (!info) return '';
-            
-            return `
-                <div class="exercise-info">
-                    <button class="toggle-description" onclick="toggleExerciseDetails(this, event)">
-                        <i class="fas fa-info-circle"></i> Show Exercise Details
-                    </button>
-                    <div class="exercise-description">
-                        <p>${info.description}</p>
-                        <p><strong>Tips:</strong> ${info.tips}</p>
-                        <a href="${info.link}" target="_blank">
-                            <i class="fas fa-external-link-alt"></i> Learn more
-                        </a>
-                    </div>
-                </div>
-            `;
-        }
-
         function createWeekHTML(weekData, index) {
             const metrics = weekData.metrics;
             const animationDelay = index * 0.2;
             
             return `
                 <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
-                    <h2><i class="fas fa-calendar-week"></i> Week ${weekData.week_number}</h2>
+                    <h2><i class="fas fa-calendar-week"></i> Week ${weekData.title}</h2>
                     <div class="metrics">
                         <div class="metric-card">
                             <i class="fas fa-fire"></i>
@@ -691,22 +740,49 @@
                             <div class="sessions">
                                 ${day.sessions.map(session => `
                                     <div class="session">
-                                        <h4><i class="fas fa-flag"></i> ${session.name}</h4>
-                                        <div class="session-details">
-                                            ${session.duration ? `<div><i class="far fa-clock"></i> ${session.duration} min</div>` : ''}
-                                            ${session.location ? `<div><i class="fas fa-map-marker-alt"></i> ${session.location}</div>` : ''}
+                                        <div class="session-main">
+                                            <div class="session-header">
+                                                <div class="session-title">
+                                                    <i class="fas fa-flag"></i> ${session.name}
+                                                </div>
+                                                <div class="session-duration">
+                                                    <i class="far fa-clock"></i> Total: ${session.duration} min
+                                                </div>
+                                            </div>
+                                            <div class="session-meta">
+                                                ${session.location ? `
+                                                    <div class="session-location">
+                                                        <i class="fas fa-map-marker-alt"></i> ${session.location}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
                                         </div>
+                                        
+                                        ${session.structure ? parseSessionStructure(session) : ''}
+                                        
                                         ${session.equipment ? `
                                             <div class="equipment-section">
-                                                <div class="equipment-title"><i class="fas fa-tools"></i> Equipment:</div>
-                                                <div class="equipment-list">
-                                                    ${session.equipment.split(',').map(item => `
-                                                        <div class="equipment-item"><i class="fas fa-check"></i>${item.trim()}</div>
-                                                    `).join('')}
+                                                <div class="equipment-header" onclick="toggleSection(this)">
+                                                    <div class="subsection-title">
+                                                        <i class="fas fa-tools"></i> Equipment Required
+                                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="section-content">
+                                                    <div class="equipment-grid">
+                                                        ${session.equipment.split(',').map(item => `
+                                                            <div class="equipment-item">
+                                                                <i class="fas fa-check"></i>${item.trim()}
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ` : ''}
-                                        ${createExerciseInfoHTML(session)}
+                                        
+                                        <div class="exercise-details">
+                                            ${createExerciseInfoHTML(session)}
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -736,6 +812,13 @@
             // Update button text
             const isExpanded = description.classList.contains('expanded');
             button.innerHTML = `<i class="fas fa-info-circle"></i> ${isExpanded ? 'Hide' : 'Show'} Exercise Details`;
+        }
+
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.toggle-icon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
         }
 
         function loadTrainingData() {
