@@ -3,6 +3,12 @@ import re
 import json
 from pathlib import Path
 import os
+from datetime import datetime
+import logging
+import traceback
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -171,66 +177,154 @@ def parse_training_file(file_path):
     
     return weeks
 
-def calculate_progress(weeks):
-    from datetime import datetime
-    current_time = datetime.strptime('2025-01-13T15:24:00+01:00', '%Y-%m-%dT%H:%M:%S%z')
-    
-    # Initialize counters for each session type
-    session_stats = {}
-    starting_weight = None
-    current_weight = None
-    
-    for week in weeks:
-        for day in week['days']:
-            # Parse the date
-            date_str = f"{day['date']} 2025"  # Add year since it's not in the original string
-            day_date = datetime.strptime(date_str, '%b %d %Y')
+def get_actual_weights(month):
+    try:
+        progress_file = os.path.join('progress', f'{month}_2025_progress.md')
+        print(f"\n=== Reading progress file: {progress_file} ===")  # Debug
+        
+        if not os.path.exists(progress_file):
+            print(f"Progress file not found: {progress_file}")  # Debug
+            return []
+        
+        actual_weights = []
+        
+        with open(progress_file, 'r') as f:
+            content = f.read()
+            print(f"\nProgress file content:\n{content}\n")  # Debug
             
-            # Only process past days
-            if day_date.date() <= current_time.date():
-                # Track weight progress
-                if starting_weight is None and day['weight']:
-                    starting_weight = day['weight']
-                if day['weight']:
-                    current_weight = day['weight']
+        # Parse each day's entry - using simpler pattern that works
+        day_pattern = r'### ([A-Za-z]+ [A-Za-z]+ \d+) \| Weight: ([\d.]+) kg'
+        matches = list(re.finditer(day_pattern, content))
+        print(f"\nFound {len(matches)} weight entries")  # Debug
+        
+        # Print all matches
+        for i, match in enumerate(matches):
+            print(f"Match {i+1}:")
+            print(f"  Full match: '{match.group(0)}'")
+            print(f"  Groups: {match.groups()}")
+            print(f"  Start: {match.start()}, End: {match.end()}")
+        
+        for match in matches:
+            date_str, weight = match.groups()
+            date_str = date_str.strip()  # Clean up any extra whitespace
+            weight = weight.strip()  # Clean up any extra whitespace
+            print(f"Found match - Date: '{date_str}', Weight: '{weight}'")  # Debug
+            try:
+                # Parse date in format "Mon Jan 13"
+                date = datetime.strptime(f"{date_str} 2025", '%a %b %d %Y')
+                weight_float = float(weight)
+                actual_weights.append({
+                    'date': date,
+                    'weight': weight_float
+                })
+                print(f"Successfully parsed weight: {weight_float} kg for date: {date}")  # Debug
+            except ValueError as e:
+                print(f"Error parsing date or weight: {e}")
+                continue
+        
+        # Sort by date and return
+        sorted_weights = sorted(actual_weights, key=lambda x: x['date'])
+        print(f"\nFinal sorted weights: {sorted_weights}")  # Debug
+        return sorted_weights
+    except Exception as e:
+        print(f"Error reading progress file: {str(e)}")
+        traceback.print_exc()  # Print full stack trace
+        return []
+
+def calculate_progress(weeks, actual_weights):
+    try:
+        current_time = datetime.strptime('2025-01-13T16:48:42+01:00', '%Y-%m-%dT%H:%M:%S%z')
+        print(f"\n=== Calculating Progress ===")  # Debug
+        
+        # Initialize counters for each session type
+        session_stats = {}
+        
+        # Get starting and current weight from actual weights
+        starting_weight = None
+        current_weight = None
+        weight_loss = None
+        
+        if actual_weights:
+            starting_weight = float(actual_weights[0]['weight'])
+            current_weight = float(actual_weights[-1]['weight'])
+            weight_loss = round(starting_weight - current_weight, 2) if starting_weight and current_weight else None
+            print(f"Calculated weights - Starting: {starting_weight}, Current: {current_weight}, Loss: {weight_loss}")  # Debug
+        else:
+            print("No actual weights found")  # Debug
+        
+        # Track planned weights and dates
+        planned_weights = []
+        dates = []
+        
+        for week in weeks:
+            for day in week['days']:
+                # Parse the date
+                date_str = f"{day['date']} 2025"  # Add year since it's not in the original string
+                day_date = datetime.strptime(date_str, '%b %d %Y')
+                dates.append(day_date)
                 
-                # Process sessions
-                for session in day['sessions']:
-                    session_type = session['name'].split(':')[-1].strip() if ':' in session['name'] else session['name']
-                    
-                    # Initialize stats for new session type
-                    if session_type not in session_stats:
-                        session_stats[session_type] = {
-                            'total': 0,
-                            'completed': 0
-                        }
-                    
-                    session_stats[session_type]['total'] += 1
-                    # Consider a session completed if it has details or structure
-                    if session['details'] or (session['structure'] and session['structure'][0]['items']):
-                        session_stats[session_type]['completed'] += 1
-    
-    # Calculate completion percentages and format stats
-    progress_stats = {
-        'session_progress': [],
-        'weight_progress': {
-            'starting_weight': starting_weight,
-            'current_weight': current_weight,
-            'weight_loss': round(starting_weight - current_weight, 2) if starting_weight and current_weight else None
+                # Track planned weights
+                if day.get('weight'):  # Use get() to safely handle missing weight
+                    try:
+                        weight = float(day['weight'])
+                        planned_weights.append({
+                            'date': day_date,
+                            'weight': weight
+                        })
+                        print(f"Added planned weight: {weight} for date: {day_date}")  # Debug
+                    except (ValueError, TypeError) as e:
+                        print(f"Error parsing planned weight for {date_str}: {e}")
+                
+                # Only process sessions for past days
+                if day_date.date() <= current_time.date():
+                    # Process sessions
+                    for session in day.get('sessions', []):  # Use get() with default empty list
+                        session_type = session['name'].split(':')[-1].strip() if ':' in session['name'] else session['name']
+                        
+                        # Initialize stats for new session type
+                        if session_type not in session_stats:
+                            session_stats[session_type] = {
+                                'total': 0,
+                                'completed': 0
+                            }
+                        
+                        session_stats[session_type]['total'] += 1
+                        # Consider a session completed if it has details or structure
+                        if session.get('details') or (session.get('structure') and session['structure'][0].get('items')):
+                            session_stats[session_type]['completed'] += 1
+        
+        # Calculate completion percentages and format stats
+        progress_stats = {
+            'session_progress': [],
+            'weight_progress': {
+                'starting_weight': starting_weight,
+                'current_weight': current_weight,
+                'weight_loss': weight_loss,
+                'planned_weights': [float(w['weight']) for w in sorted(planned_weights, key=lambda x: x['date'])],
+                'actual_weights': [float(w['weight']) for w in sorted(actual_weights, key=lambda x: x['date'])],
+                'dates': [d.strftime('%Y-%m-%d') for d in dates]
+            }
         }
-    }
-    
-    for session_type, stats in session_stats.items():
-        if stats['total'] > 0:
-            completion_rate = (stats['completed'] / stats['total']) * 100
-            progress_stats['session_progress'].append({
-                'type': session_type,
-                'completed': stats['completed'],
-                'total': stats['total'],
-                'percentage': round(completion_rate, 1)
-            })
-    
-    return progress_stats
+        
+        print(f"\n=== Progress Stats ===")  # Debug
+        print(f"Session Progress: {json.dumps(progress_stats['session_progress'], indent=2)}")  # Debug
+        print(f"Weight Progress: {json.dumps(progress_stats['weight_progress'], indent=2)}")  # Debug
+        
+        for session_type, stats in session_stats.items():
+            if stats['total'] > 0:
+                completion_rate = (stats['completed'] / stats['total']) * 100
+                progress_stats['session_progress'].append({
+                    'type': session_type,
+                    'completed': stats['completed'],
+                    'total': stats['total'],
+                    'percentage': round(completion_rate, 1)
+                })
+        
+        return progress_stats
+    except Exception as e:
+        print(f"Error in calculate_progress: {str(e)}")
+        traceback.print_exc()
+        raise  # Re-raise the exception to be caught by the route handler
 
 @app.route('/')
 def home():
@@ -252,27 +346,60 @@ def get_training_data(month):
         
         # Debug: Print the JSON structure for the first day's sessions
         if weeks and weeks[0]['days']:
-            print("\nDEBUG: First day's sessions:")
-            print(json.dumps(weeks[0]['days'][0]['sessions'], indent=2))
+            logging.debug("\nDEBUG: First day's sessions:")
+            logging.debug(json.dumps(weeks[0]['days'][0]['sessions'], indent=2))
             
         return jsonify(weeks)
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logging.error(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/progress/<month>')
 def get_progress(month):
     try:
+        print(f"\n=== Getting progress for month: {month} ===")  # Debug
+        
+        # First get the training data
         file_path = os.path.join('planning', f'{month}_2025.md')
+        if not os.path.exists(file_path):
+            print(f"Training file not found: {file_path}")  # Debug
+            return jsonify({"error": f"Training file not found: {file_path}"}), 404
+            
         with open(file_path, 'r') as f:
             content = f.read()
-        
+            
         weeks = parse_training_file(file_path)
-        progress = calculate_progress(weeks)
+        if not weeks:
+            print("No training data found")  # Debug
+            return jsonify({"error": "No training data found"}), 404
+            
+        # Get actual weights
+        actual_weights = get_actual_weights(month)
+        print(f"Found actual weights: {json.dumps(actual_weights, indent=2, default=str)}")  # Debug
+            
+        # Calculate progress
+        progress = calculate_progress(weeks, actual_weights)
+        print(f"Final progress data: {json.dumps(progress, indent=2, default=str)}")  # Debug
+        
+        # Ensure we have the required structure
+        if not progress.get('weight_progress'):
+            progress['weight_progress'] = {
+                'starting_weight': None,
+                'current_weight': None,
+                'weight_loss': None,
+                'planned_weights': [],
+                'actual_weights': [],
+                'dates': []
+            }
+        if not progress.get('session_progress'):
+            progress['session_progress'] = []
+            
         return jsonify(progress)
+        
     except Exception as e:
-        print(f"Error calculating progress: {str(e)}")
+        print(f"Error in get_progress: {str(e)}")
+        traceback.print_exc()  # Print full stack trace
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=8080, debug=True)
+    app.run(port=8080, debug=True, use_reloader=True)

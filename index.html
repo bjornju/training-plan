@@ -6,6 +6,8 @@
     <title>Training Plan Viewer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         :root {
             --primary-color: #2ecc71;
@@ -592,6 +594,21 @@
             border-radius: 6px;
             padding: 15px;
             margin-top: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .weight-info {
+            min-width: 250px;
+        }
+
+        .weight-graph {
+            background: white;
+            border-radius: 4px;
+            padding: 10px;
+            height: 200px;
         }
 
         .weight-title {
@@ -641,7 +658,7 @@
                 <option value="march">March 2025</option>
                 <option value="april">April 2025</option>
             </select>
-            <button onclick="loadTrainingData()">
+            <button onclick="loadTrainingPlan()">
                 <i class="fas fa-sync-alt"></i> Load Plan
             </button>
         </div>
@@ -1006,40 +1023,62 @@
         }
 
         function createProgressWidgetHTML(progressData) {
-            const { session_progress, weight_progress: wp } = progressData;
+            console.log('Creating progress widget with data:', JSON.stringify(progressData, null, 2));  // Debug
             
+            if (!progressData || !progressData.weight_progress || !progressData.session_progress) {
+                console.error('Invalid progress data:', progressData);
+                return '<div class="error">Error loading progress data</div>';
+            }
+
+            const wp = progressData.weight_progress;
+            console.log('Weight progress data:', JSON.stringify(wp, null, 2));  // Debug
+            
+            // Create session progress HTML
+            const sessionProgressHTML = progressData.session_progress.map(sp => `
+                <div class="progress-card">
+                    <div class="progress-title">${sp.type}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${sp.percentage}%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span class="progress-percentage">${sp.percentage}%</span>
+                        <span class="progress-count">${sp.completed}/${sp.total}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Create weight progress HTML
+            const weightProgressHTML = `
+                <div class="weight-info">
+                    <div class="weight-title">Weight Progress</div>
+                    <div class="weight-stats">
+                        <div class="weight-stat">
+                            <span class="weight-label">Starting Weight</span>
+                            <span class="weight-value">${wp.starting_weight ? wp.starting_weight.toFixed(2) : '---'} kg</span>
+                        </div>
+                        <div class="weight-stat">
+                            <span class="weight-label">Current Weight</span>
+                            <span class="weight-value">${wp.current_weight ? wp.current_weight.toFixed(2) : '---'} kg</span>
+                        </div>
+                        <div class="weight-stat">
+                            <span class="weight-label">Weight Loss</span>
+                            <span class="weight-value weight-loss">${wp.weight_loss ? wp.weight_loss.toFixed(2) : '---'} kg</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="weight-graph">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            `;
+            
+            // Combine all parts
             return `
-                <div id="progress-widget" class="progress-widget">
-                    <div class="progress-title">Training Progress</div>
-                    <div class="progress-grid">
-                        ${session_progress.map(progress => `
-                            <div class="progress-card">
-                                <div class="progress-card-title">${progress.type}</div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" style="width: ${progress.percentage}%"></div>
-                                </div>
-                                <div class="progress-stats">
-                                    ${progress.completed}/${progress.total} completed (${progress.percentage}%)
-                                </div>
-                            </div>
-                        `).join('')}
+                <div class="progress-widget">
+                    <div class="session-progress">
+                        ${sessionProgressHTML}
                     </div>
                     <div class="weight-progress">
-                        <div class="weight-title">Weight Progress</div>
-                        <div class="weight-stats">
-                            <div class="weight-stat">
-                                <span class="weight-label">Starting Weight</span>
-                                <span class="weight-value">${wp.starting_weight} kg</span>
-                            </div>
-                            <div class="weight-stat">
-                                <span class="weight-label">Current Weight</span>
-                                <span class="weight-value">${wp.current_weight} kg</span>
-                            </div>
-                            <div class="weight-stat">
-                                <span class="weight-label">Weight Loss</span>
-                                <span class="weight-value weight-loss">-${wp.weight_loss} kg</span>
-                            </div>
-                        </div>
+                        ${weightProgressHTML}
                     </div>
                 </div>
             `;
@@ -1082,49 +1121,88 @@
             icon.classList.toggle('expanded');
         }
 
-        async function loadTrainingData() {
-            const month = document.getElementById('monthSelect').value;
+        async function loadTrainingPlan() {
             const contentDiv = document.getElementById('trainingContent');
-            
             contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading training plan...</div>';
             
             try {
-                // Load both data in parallel
-                const [progressResponse, trainingResponse] = await Promise.all([
-                    fetch(`/api/progress/${month}`),
-                    fetch(`/api/training/${month}`)
+                // First fetch both training and progress data
+                console.log('Fetching training and progress data...');  // Debug
+                const [trainingResponse, progressResponse] = await Promise.all([
+                    fetch('/api/training/january'),
+                    fetch('/api/progress/january')
                 ]);
 
-                if (!progressResponse.ok || !trainingResponse.ok) {
-                    throw new Error(`HTTP error! status: ${progressResponse.status || trainingResponse.status}`);
+                // Check for errors in responses
+                if (!trainingResponse.ok) {
+                    throw new Error(`Training data fetch failed: ${trainingResponse.statusText}`);
+                }
+                if (!progressResponse.ok) {
+                    throw new Error(`Progress data fetch failed: ${progressResponse.statusText}`);
                 }
 
-                const [progressData, weeks] = await Promise.all([
-                    progressResponse.json(),
-                    trainingResponse.json()
-                ]);
+                const weeks = await trainingResponse.json();
+                const progressData = await progressResponse.json();
+
+                console.log('Received progress data:', JSON.stringify(progressData, null, 2));  // Debug
+                console.log('Received training data:', JSON.stringify(weeks, null, 2));  // Debug
+
+                // Create and insert progress widget first
+                const progressWidget = createProgressWidgetHTML(progressData);
                 
-                if (weeks.length === 0) {
-                    throw new Error('No weeks found in the training data');
-                }
+                // Then add the weeks
+                contentDiv.innerHTML = progressWidget + weeks.map((week, index) => createWeekHTML(week, index)).join('');
 
-                // Store progress data to be used in createWeekHTML
+                // Store progress data for later use
                 window.currentProgressData = progressData;
                 
-                contentDiv.innerHTML = weeks.map((week, index) => createWeekHTML(week, index)).join('');
+                // Draw weight chart if we have data
+                if (progressData && progressData.weight_progress) {
+                    const ctx = document.getElementById('weightChart').getContext('2d');
+                    const weightData = progressData.weight_progress;
+                    
+                    console.log('Weight data for chart:', JSON.stringify(weightData, null, 2));  // Debug
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: weightData.dates,
+                            datasets: [
+                                {
+                                    label: 'Actual Weight',
+                                    data: weightData.actual_weights,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Planned Weight',
+                                    data: weightData.planned_weights,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    tension: 0.1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.log('No weight data available for chart');  // Debug
+                }
             } catch (error) {
-                console.error('Error loading training plan:', error);
-                contentDiv.innerHTML = `
-                    <div class="error" style="padding: 20px; background-color: #fee; border-radius: 10px; color: #c33;">
-                        <h3><i class="fas fa-exclamation-triangle"></i> Error loading training plan</h3>
-                        <p>${error.message}</p>
-                        <p>Please check the browser console for more details.</p>
-                    </div>`;
+                console.error('Error loading data:', error);
+                contentDiv.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
             }
         }
 
         // Load initial data
-        loadTrainingData();
+        loadTrainingPlan();
     </script>
 </body>
 </html>
