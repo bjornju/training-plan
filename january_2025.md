@@ -1,11 +1,11 @@
 # January 2025 Training Plan
 
 ## Week 3 (Jan 13-19)
-Target weight by end of week: 73.19 kg
+Target weight by end of week: 73.99 kg
 
 **Monday, Jan 13**
 TODAY'S CALORIC TARGET: 1,900 kcal (Recovery day)
-Current weight: 74.00 kg
+Current weight: 74.40 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -38,7 +38,7 @@ Current weight: 74.00 kg
 
 **Tuesday, Jan 14**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 73.55 kg
+Current weight: 74.35 kg
 
 - Morning: Elite strength maintenance
   * Duration: 75 min
@@ -70,7 +70,7 @@ Current weight: 73.55 kg
 
 **Wednesday, Jan 15**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 73.48 kg
+Current weight: 74.28 kg
 
 - Morning: Technical running
   * Duration: 60 min
@@ -84,7 +84,7 @@ Current weight: 73.48 kg
 
 **Thursday, Jan 16**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 73.42 kg
+Current weight: 74.22 kg
 
 - Morning: High-intensity intervals
   * Duration: 75 min
@@ -98,7 +98,7 @@ Current weight: 73.42 kg
 
 **Friday, Jan 17**
 TODAY'S CALORIC TARGET: 2,300 kcal
-Current weight: 73.35 kg
+Current weight: 74.15 kg
 
 - Morning: Recovery run
   * Duration: 45 min
@@ -112,7 +112,7 @@ Current weight: 73.35 kg
 
 **Saturday, Jan 18**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 73.27 kg
+Current weight: 74.07 kg
 
 - Morning: Long run with navigation
   * Duration: 120 min
@@ -121,7 +121,7 @@ Current weight: 73.27 kg
 
 **Sunday, Jan 19**
 TODAY'S CALORIC TARGET: 1,900 kcal
-Current weight: 73.19 kg
+Current weight: 73.99 kg
 
 - Active recovery
   * Duration: 60 min
@@ -129,11 +129,11 @@ Current weight: 73.19 kg
   * Focus: Light movement and stretching
 
 ## Week 4 (Jan 20-26)
-Target weight by end of week: 72.38 kg
+Target weight by end of week: 73.18 kg
 
 **Monday, Jan 20**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 73.12 kg
+Current weight: 73.92 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -197,7 +197,7 @@ Current weight: 73.12 kg
 
 **Tuesday, Jan 21**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 72.95 kg
+Current weight: 73.75 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -232,7 +232,7 @@ Current weight: 72.95 kg
 
 **Wednesday, Jan 22**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 72.81 kg
+Current weight: 73.61 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -294,7 +294,7 @@ Current weight: 72.81 kg
 
 **Thursday, Jan 23**
 TODAY'S CALORIC TARGET: 2,300 kcal
-Current weight: 72.67 kg
+Current weight: 73.47 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -333,7 +333,7 @@ Current weight: 72.67 kg
 
 **Friday, Jan 24**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 72.57 kg
+Current weight: 73.37 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -372,7 +372,7 @@ Current weight: 72.57 kg
 
 **Saturday, Jan 25**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 72.47 kg
+Current weight: 73.27 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -422,7 +422,7 @@ Current weight: 72.47 kg
 
 **Sunday, Jan 26**
 TODAY'S CALORIC TARGET: 1,900 kcal
-Current weight: 72.38 kg
+Current weight: 73.18 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -455,11 +455,11 @@ Current weight: 72.38 kg
        - Goal assessment
 
 ## Week 5 (Jan 27-Feb 2)
-Target weight by end of week: 71.95 kg
+Target weight by end of week: 72.75 kg
 
 **Monday, Jan 27**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 72.31 kg
+Current weight: 73.11 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -523,7 +523,7 @@ Current weight: 72.31 kg
 
 **Tuesday, Jan 28**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 72.23 kg
+Current weight: 73.03 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -558,7 +558,7 @@ Current weight: 72.23 kg
 
 **Wednesday, Jan 29**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 72.15 kg
+Current weight: 72.95 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -620,7 +620,7 @@ Current weight: 72.15 kg
 
 **Thursday, Jan 30**
 TODAY'S CALORIC TARGET: 2,300 kcal
-Current weight: 72.08 kg
+Current weight: 72.88 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -659,7 +659,7 @@ Current weight: 72.08 kg
 
 **Friday, Jan 31**
 TODAY'S CALORIC TARGET: 2,200 kcal
-Current weight: 72.01 kg
+Current weight: 72.81 kg
 
 - Run streak minimum (Morning)
   * Distance: 1.5 km
@@ -698,8 +698,8 @@ Current weight: 72.01 kg
 
 **Saturday, Feb 1**
 TODAY'S CALORIC TARGET: 2,100 kcal
-Current weight: 71.98 kg
+Current weight: 72.78 kg
 
 **Sunday, Feb 2**
 TODAY'S CALORIC TARGET: 1,900 kcal
-Current weight: 71.95 kg
+Current weight: 72.75 kg
