@@ -179,6 +179,12 @@
             transition: all 0.3s ease;
         }
 
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .day:hover {
             transform: translateX(5px);
             border-color: var(--primary-color);
@@ -319,6 +325,22 @@
         
         .toggle-description:hover {
             color: #81C784;
+        }
+
+        .sessions {
+            display: none;
+        }
+        
+        .sessions.expanded {
+            display: block;
+        }
+        
+        .exercise-description {
+            display: none;
+        }
+        
+        .exercise-description.expanded {
+            display: block;
         }
 
         @keyframes bounce {
@@ -618,10 +640,10 @@
             
             return `
                 <div class="exercise-info">
-                    <button class="toggle-description" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    <button class="toggle-description" onclick="toggleExerciseDetails(this, event)">
                         <i class="fas fa-info-circle"></i> Show Exercise Details
                     </button>
-                    <div class="exercise-description" style="display: none;">
+                    <div class="exercise-description">
                         <p>${info.description}</p>
                         <p><strong>Tips:</strong> ${info.tips}</p>
                         <a href="${info.link}" target="_blank">
@@ -657,16 +679,16 @@
                         </div>
                     </div>
                     ${weekData.days.map(day => `
-                        <div class="day" onclick="this.querySelector('.sessions').style.display = this.querySelector('.sessions').style.display === 'none' ? 'block' : 'none'">
-                            <h3>
+                        <div class="day" onclick="toggleDay(this, event)">
+                            <div class="day-header">
                                 <span><i class="far fa-calendar-alt"></i> ${day.day} - ${day.date}</span>
                                 <span class="calorie-badge"><i class="fas fa-fire-alt"></i> ${formatMetric(day.calories, 'calories')} kcal</span>
-                            </h3>
+                            </div>
                             <div class="weight"><i class="fas fa-weight"></i> Weight: ${formatMetric(day.weight, 'weight')} kg</div>
                             <div class="day-type ${getDayTypeClass(day.calories)}">
                                 <i class="fas fa-chart-line"></i> ${getDayType(day.calories)}
                             </div>
-                            <div class="sessions" style="display: none;">
+                            <div class="sessions">
                                 ${day.sessions.map(session => `
                                     <div class="session">
                                         <h4><i class="fas fa-flag"></i> ${session.name}</h4>
@@ -678,13 +700,20 @@
                                             <div class="equipment-section">
                                                 <div class="equipment-title"><i class="fas fa-tools"></i> Equipment:</div>
                                                 <div class="equipment-list">
-                                                    ${session.equipment.replace(/[\[\]]/g, '').split(',').map(item => `
+                                                    ${session.equipment.split(',').map(item => `
                                                         <div class="equipment-item"><i class="fas fa-check"></i>${item.trim()}</div>
                                                     `).join('')}
                                                 </div>
                                             </div>
                                         ` : ''}
-                                        ${createExerciseInfoHTML(session)}
+                                        <div class="exercise-info">
+                                            <button class="toggle-description" onclick="toggleExerciseDetails(this, event)">
+                                                <i class="fas fa-info-circle"></i> Show Exercise Details
+                                            </button>
+                                            <div class="exercise-description">
+                                                ${createExerciseInfoHTML(session)}
+                                            </div>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -692,6 +721,28 @@
                     `).join('')}
                 </div>
             `;
+        }
+
+        function toggleDay(element, event) {
+            // Prevent clicks within the sessions area from triggering day toggle
+            if (event.target.closest('.sessions')) {
+                return;
+            }
+            
+            const sessions = element.querySelector('.sessions');
+            if (sessions) {
+                sessions.classList.toggle('expanded');
+            }
+        }
+        
+        function toggleExerciseDetails(button, event) {
+            event.stopPropagation(); // Prevent day toggle
+            const description = button.nextElementSibling;
+            description.classList.toggle('expanded');
+            
+            // Update button text
+            const isExpanded = description.classList.contains('expanded');
+            button.innerHTML = `<i class="fas fa-info-circle"></i> ${isExpanded ? 'Hide' : 'Show'} Exercise Details`;
         }
 
         function loadTrainingData() {
