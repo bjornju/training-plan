@@ -533,6 +533,98 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Add progress widget styles */
+        .progress-widget {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            padding: 20px;
+        }
+
+        .progress-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .progress-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .progress-card-title {
+            color: #34495e;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-container {
+            background: #e9ecef;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-bar {
+            background: #3498db;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .weight-progress {
+            background: #e8f6f3;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .weight-title {
+            color: #16a085;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .weight-stats {
+            display: flex;
+            gap: 20px;
+            color: #2c3e50;
+        }
+
+        .weight-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .weight-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .weight-value {
+            font-weight: 500;
+        }
+
+        .weight-loss {
+            color: #27ae60;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -874,6 +966,7 @@
             const animationDelay = index * 0.2;
             
             return `
+                ${index === 0 && window.currentProgressData ? createProgressWidgetHTML(window.currentProgressData) : ''}
                 <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
                     <h2><i class="fas fa-calendar-week"></i> Week ${weekData.title}</h2>
                     <div class="metrics">
@@ -908,6 +1001,46 @@
                             </div>
                         </div>
                     `).join('')}
+                </div>
+            `;
+        }
+
+        function createProgressWidgetHTML(progressData) {
+            const { session_progress, weight_progress: wp } = progressData;
+            
+            return `
+                <div id="progress-widget" class="progress-widget">
+                    <div class="progress-title">Training Progress</div>
+                    <div class="progress-grid">
+                        ${session_progress.map(progress => `
+                            <div class="progress-card">
+                                <div class="progress-card-title">${progress.type}</div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${progress.percentage}%"></div>
+                                </div>
+                                <div class="progress-stats">
+                                    ${progress.completed}/${progress.total} completed (${progress.percentage}%)
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="weight-progress">
+                        <div class="weight-title">Weight Progress</div>
+                        <div class="weight-stats">
+                            <div class="weight-stat">
+                                <span class="weight-label">Starting Weight</span>
+                                <span class="weight-value">${wp.starting_weight} kg</span>
+                            </div>
+                            <div class="weight-stat">
+                                <span class="weight-label">Current Weight</span>
+                                <span class="weight-value">${wp.current_weight} kg</span>
+                            </div>
+                            <div class="weight-stat">
+                                <span class="weight-label">Weight Loss</span>
+                                <span class="weight-value weight-loss">-${wp.weight_loss} kg</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -949,36 +1082,45 @@
             icon.classList.toggle('expanded');
         }
 
-        function loadTrainingData() {
+        async function loadTrainingData() {
             const month = document.getElementById('monthSelect').value;
             const contentDiv = document.getElementById('trainingContent');
             
             contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading training plan...</div>';
             
-            // Use the API endpoint
-            fetch(`/api/training/${month}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(weeks => {
-                    console.log('Parsed weeks:', weeks); // Debug log
-                    if (weeks.length === 0) {
-                        throw new Error('No weeks found in the training data');
-                    }
-                    contentDiv.innerHTML = weeks.map((week, index) => createWeekHTML(week, index)).join('');
-                })
-                .catch(error => {
-                    console.error('Error loading training plan:', error);
-                    contentDiv.innerHTML = `
-                        <div class="error" style="padding: 20px; background-color: #fee; border-radius: 10px; color: #c33;">
-                            <h3><i class="fas fa-exclamation-triangle"></i> Error loading training plan</h3>
-                            <p>${error.message}</p>
-                            <p>Please check the browser console for more details.</p>
-                        </div>`;
-                });
+            try {
+                // Load both data in parallel
+                const [progressResponse, trainingResponse] = await Promise.all([
+                    fetch(`/api/progress/${month}`),
+                    fetch(`/api/training/${month}`)
+                ]);
+
+                if (!progressResponse.ok || !trainingResponse.ok) {
+                    throw new Error(`HTTP error! status: ${progressResponse.status || trainingResponse.status}`);
+                }
+
+                const [progressData, weeks] = await Promise.all([
+                    progressResponse.json(),
+                    trainingResponse.json()
+                ]);
+                
+                if (weeks.length === 0) {
+                    throw new Error('No weeks found in the training data');
+                }
+
+                // Store progress data to be used in createWeekHTML
+                window.currentProgressData = progressData;
+                
+                contentDiv.innerHTML = weeks.map((week, index) => createWeekHTML(week, index)).join('');
+            } catch (error) {
+                console.error('Error loading training plan:', error);
+                contentDiv.innerHTML = `
+                    <div class="error" style="padding: 20px; background-color: #fee; border-radius: 10px; color: #c33;">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Error loading training plan</h3>
+                        <p>${error.message}</p>
+                        <p>Please check the browser console for more details.</p>
+                    </div>`;
+            }
         }
 
         // Load initial data

@@ -171,6 +171,67 @@ def parse_training_file(file_path):
     
     return weeks
 
+def calculate_progress(weeks):
+    from datetime import datetime
+    current_time = datetime.strptime('2025-01-13T15:24:00+01:00', '%Y-%m-%dT%H:%M:%S%z')
+    
+    # Initialize counters for each session type
+    session_stats = {}
+    starting_weight = None
+    current_weight = None
+    
+    for week in weeks:
+        for day in week['days']:
+            # Parse the date
+            date_str = f"{day['date']} 2025"  # Add year since it's not in the original string
+            day_date = datetime.strptime(date_str, '%b %d %Y')
+            
+            # Only process past days
+            if day_date.date() <= current_time.date():
+                # Track weight progress
+                if starting_weight is None and day['weight']:
+                    starting_weight = day['weight']
+                if day['weight']:
+                    current_weight = day['weight']
+                
+                # Process sessions
+                for session in day['sessions']:
+                    session_type = session['name'].split(':')[-1].strip() if ':' in session['name'] else session['name']
+                    
+                    # Initialize stats for new session type
+                    if session_type not in session_stats:
+                        session_stats[session_type] = {
+                            'total': 0,
+                            'completed': 0
+                        }
+                    
+                    session_stats[session_type]['total'] += 1
+                    # Consider a session completed if it has details or structure
+                    if session['details'] or (session['structure'] and session['structure'][0]['items']):
+                        session_stats[session_type]['completed'] += 1
+    
+    # Calculate completion percentages and format stats
+    progress_stats = {
+        'session_progress': [],
+        'weight_progress': {
+            'starting_weight': starting_weight,
+            'current_weight': current_weight,
+            'weight_loss': round(starting_weight - current_weight, 2) if starting_weight and current_weight else None
+        }
+    }
+    
+    for session_type, stats in session_stats.items():
+        if stats['total'] > 0:
+            completion_rate = (stats['completed'] / stats['total']) * 100
+            progress_stats['session_progress'].append({
+                'type': session_type,
+                'completed': stats['completed'],
+                'total': stats['total'],
+                'percentage': round(completion_rate, 1)
+            })
+    
+    return progress_stats
+
 @app.route('/')
 def home():
     return send_file('index.html')
@@ -197,6 +258,20 @@ def get_training_data(month):
         return jsonify(weeks)
     except Exception as e:
         print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/progress/<month>')
+def get_progress(month):
+    try:
+        file_path = os.path.join('planning', f'{month}_2025.md')
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        weeks = parse_training_file(file_path)
+        progress = calculate_progress(weeks)
+        return jsonify(progress)
+    except Exception as e:
+        print(f"Error calculating progress: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
