@@ -233,8 +233,9 @@ def get_actual_weights(month):
 
 def calculate_progress(weeks, actual_weights):
     try:
-        current_time = datetime.strptime('2025-01-13T16:48:42+01:00', '%Y-%m-%dT%H:%M:%S%z')
+        current_time = datetime.strptime('2025-01-13T22:48:17+01:00', '%Y-%m-%dT%H:%M:%S%z')
         print(f"\n=== Calculating Progress ===")  # Debug
+        print(f"Current time: {current_time}")  # Debug
         
         # Initialize counters for each session type
         session_stats = {}
@@ -258,40 +259,52 @@ def calculate_progress(weeks, actual_weights):
         
         for week in weeks:
             for day in week['days']:
-                # Parse the date
-                date_str = f"{day['date']} 2025"  # Add year since it's not in the original string
-                day_date = datetime.strptime(date_str, '%b %d %Y')
-                dates.append(day_date)
-                
-                # Track planned weights
-                if day.get('weight'):  # Use get() to safely handle missing weight
-                    try:
-                        weight = float(day['weight'])
-                        planned_weights.append({
-                            'date': day_date,
-                            'weight': weight
-                        })
-                        print(f"Added planned weight: {weight} for date: {day_date}")  # Debug
-                    except (ValueError, TypeError) as e:
-                        print(f"Error parsing planned weight for {date_str}: {e}")
-                
-                # Only process sessions for past days
-                if day_date.date() <= current_time.date():
-                    # Process sessions
-                    for session in day.get('sessions', []):  # Use get() with default empty list
-                        session_type = session['name'].split(':')[-1].strip() if ':' in session['name'] else session['name']
-                        
-                        # Initialize stats for new session type
-                        if session_type not in session_stats:
-                            session_stats[session_type] = {
-                                'total': 0,
-                                'completed': 0
-                            }
-                        
-                        session_stats[session_type]['total'] += 1
-                        # Consider a session completed if it has details or structure
-                        if session.get('details') or (session.get('structure') and session['structure'][0].get('items')):
-                            session_stats[session_type]['completed'] += 1
+                try:
+                    # Parse the date correctly based on month
+                    date_str = day['date']  # e.g. "Feb 1"
+                    month = date_str.split()[0]  # e.g. "Feb"
+                    day_num = int(date_str.split()[1])  # e.g. 1
+                    
+                    # Convert month abbreviation to month number
+                    month_num = datetime.strptime(month, '%b').month
+                    
+                    # Create full date in 2025
+                    day_date = datetime(2025, month_num, day_num)
+                    dates.append(day_date)
+                    print(f"Parsed date {date_str} as {day_date}")  # Debug
+                    
+                    # Track planned weights
+                    if day.get('weight'):  # Use get() to safely handle missing weight
+                        try:
+                            weight = float(day['weight'])
+                            planned_weights.append({
+                                'date': day_date,
+                                'weight': weight
+                            })
+                            print(f"Added planned weight: {weight} for date: {day_date}")  # Debug
+                        except (ValueError, TypeError) as e:
+                            print(f"Error parsing planned weight for {date_str}: {e}")
+                    
+                    # Only process sessions that have passed
+                    if day_date.date() <= current_time.date():
+                        # Process sessions
+                        for session in day.get('sessions', []):  # Use get() with default empty list
+                            session_type = session['name'].split(':')[-1].strip() if ':' in session['name'] else session['name']
+                            
+                            # Initialize stats for new session type
+                            if session_type not in session_stats:
+                                session_stats[session_type] = {
+                                    'total': 0,
+                                    'completed': 0
+                                }
+                            
+                            session_stats[session_type]['total'] += 1
+                            # Consider a session completed if it has details or structure
+                            if session.get('details') or (session.get('structure') and session['structure'][0].get('items')):
+                                session_stats[session_type]['completed'] += 1
+                except Exception as e:
+                    print(f"Error processing day {date_str}: {e}")  # Debug
+                    continue
         
         # Calculate completion percentages and format stats
         progress_stats = {
@@ -310,6 +323,7 @@ def calculate_progress(weeks, actual_weights):
         print(f"Session Progress: {json.dumps(progress_stats['session_progress'], indent=2)}")  # Debug
         print(f"Weight Progress: {json.dumps(progress_stats['weight_progress'], indent=2)}")  # Debug
         
+        # Only include session types that have at least one session
         for session_type, stats in session_stats.items():
             if stats['total'] > 0:
                 completion_rate = (stats['completed'] / stats['total']) * 100
@@ -337,21 +351,26 @@ def serve_file(filename):
 @app.route('/api/training/<month>')
 def get_training_data(month):
     try:
+        print(f"\n=== Getting training data for month: {month} ===")  # Debug
         file_path = os.path.join('planning', f'{month}_2025.md')
+        print(f"Looking for file: {file_path}")  # Debug
+        
+        if not os.path.exists(file_path):
+            print(f"Training file not found: {file_path}")  # Debug
+            return jsonify({"error": f"Training file not found: {file_path}"}), 404
+            
         with open(file_path, 'r') as f:
             content = f.read()
+            print(f"Found training file with {len(content)} bytes")  # Debug
             
         # Parse the content
         weeks = parse_training_file(file_path)
-        
-        # Debug: Print the JSON structure for the first day's sessions
-        if weeks and weeks[0]['days']:
-            logging.debug("\nDEBUG: First day's sessions:")
-            logging.debug(json.dumps(weeks[0]['days'][0]['sessions'], indent=2))
-            
+        print(f"Parsed {len(weeks)} weeks of training data")  # Debug
         return jsonify(weeks)
+        
     except Exception as e:
-        logging.error(f"Error: {str(e)}")
+        print(f"Error in get_training_data: {str(e)}")
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/progress/<month>')
@@ -367,6 +386,7 @@ def get_progress(month):
             
         with open(file_path, 'r') as f:
             content = f.read()
+            print(f"Found training file with {len(content)} bytes")  # Debug
             
         weeks = parse_training_file(file_path)
         if not weeks:

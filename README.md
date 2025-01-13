@@ -5,10 +5,10 @@ This training plan is designed to improve orienteering skills while maintaining 
 
 ## Training Plan Structure
 The plan is divided into monthly segments:
-- [January 2025](january_2025.md) - Weeks 1-3
-- [February 2025](february_2025.md) - Weeks 4-7
-- [March 2025](march_2025.md) - Weeks 8-11
-- [April 2025](april_2025.md) - Weeks 12-15
+- [January 2025](planning/january_2025.md) - Weeks 1-3
+- [February 2025](planning/february_2025.md) - Weeks 4-7
+- [March 2025](planning/march_2025.md) - Weeks 8-11
+- [April 2025](planning/april_2025.md) - Weeks 12-15
 
 ## Key Components
 
@@ -103,5 +103,5 @@ This site is deployed using GitHub Pages. To deploy your own version:
 ## File Structure
 
 - `index.html` - Main viewer application
-- `*_2025.md` - Training plan data files
+- `planning/*_2025.md` - Training plan data files
 - `server.py` - Local development server

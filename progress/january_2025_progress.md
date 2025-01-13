@@ -6,7 +6,7 @@
 Run Streak: +
 Active Recovery: +
 
-### Tue Jan 14 | Weight: ___ kg | Calories: ___
+### Tue Jan 14 | Weight: 74.20 kg | Calories: ___
 Run Streak: _
 Long Technical: _
 

@@ -652,7 +652,7 @@
         </div>
 
         <div class="controls animate__animated animate__slideInDown">
-            <select id="monthSelect">
+            <select id="monthSelect" onchange="console.log('Month changed to:', this.value)">
                 <option value="january">January 2025</option>
                 <option value="february">February 2025</option>
                 <option value="march">March 2025</option>
@@ -983,7 +983,6 @@
             const animationDelay = index * 0.2;
             
             return `
-                ${index === 0 && window.currentProgressData ? createProgressWidgetHTML(window.currentProgressData) : ''}
                 <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
                     <h2><i class="fas fa-calendar-week"></i> Week ${weekData.title}</h2>
                     <div class="metrics">
@@ -1126,11 +1125,15 @@
             contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading training plan...</div>';
             
             try {
+                // Get selected month
+                const month = document.getElementById('monthSelect').value;
+                console.log('Loading data for month:', month);  // Debug
+                
                 // First fetch both training and progress data
                 console.log('Fetching training and progress data...');  // Debug
                 const [trainingResponse, progressResponse] = await Promise.all([
-                    fetch('/api/training/january'),
-                    fetch('/api/progress/january')
+                    fetch(`/api/training/${month}`),
+                    fetch(`/api/progress/${month}`)
                 ]);
 
                 // Check for errors in responses
