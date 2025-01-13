@@ -221,8 +221,22 @@
 
         .session-main {
             padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
             background: #f8f9fa;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .session-main:hover {
+            background: #f0f0f0;
+        }
+
+        .session-content {
+            display: none;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .session-content.expanded {
+            display: block;
         }
 
         .session-header {
@@ -236,6 +250,17 @@
             font-size: 1.2em;
             font-weight: bold;
             color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-title .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .session-title .toggle-icon.expanded {
+            transform: rotate(180deg);
         }
 
         .session-meta {
@@ -740,9 +765,10 @@
                             <div class="sessions">
                                 ${day.sessions.map(session => `
                                     <div class="session">
-                                        <div class="session-main">
+                                        <div class="session-main" onclick="toggleSession(this, event)">
                                             <div class="session-header">
                                                 <div class="session-title">
+                                                    <i class="fas fa-chevron-down toggle-icon"></i>
                                                     <i class="fas fa-flag"></i> ${session.name}
                                                 </div>
                                                 <div class="session-duration">
@@ -757,31 +783,32 @@
                                                 ` : ''}
                                             </div>
                                         </div>
-                                        
-                                        ${session.structure ? parseSessionStructure(session) : ''}
-                                        
-                                        ${session.equipment ? `
-                                            <div class="equipment-section">
-                                                <div class="equipment-header" onclick="toggleSection(this)">
-                                                    <div class="subsection-title">
-                                                        <i class="fas fa-tools"></i> Equipment Required
-                                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                        <div class="session-content">
+                                            ${session.structure ? parseSessionStructure(session) : ''}
+                                            
+                                            ${session.equipment ? `
+                                                <div class="equipment-section">
+                                                    <div class="equipment-header" onclick="toggleSection(this)">
+                                                        <div class="subsection-title">
+                                                            <i class="fas fa-tools"></i> Equipment Required
+                                                            <i class="fas fa-chevron-down toggle-icon"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="section-content">
+                                                        <div class="equipment-grid">
+                                                            ${session.equipment.split(',').map(item => `
+                                                                <div class="equipment-item">
+                                                                    <i class="fas fa-check"></i>${item.trim()}
+                                                                </div>
+                                                            `).join('')}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="section-content">
-                                                    <div class="equipment-grid">
-                                                        ${session.equipment.split(',').map(item => `
-                                                            <div class="equipment-item">
-                                                                <i class="fas fa-check"></i>${item.trim()}
-                                                            </div>
-                                                        `).join('')}
-                                                    </div>
-                                                </div>
+                                            ` : ''}
+                                            
+                                            <div class="exercise-details">
+                                                ${createExerciseInfoHTML(session)}
                                             </div>
-                                        ` : ''}
-                                        
-                                        <div class="exercise-details">
-                                            ${createExerciseInfoHTML(session)}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -812,6 +839,14 @@
             // Update button text
             const isExpanded = description.classList.contains('expanded');
             button.innerHTML = `<i class="fas fa-info-circle"></i> ${isExpanded ? 'Hide' : 'Show'} Exercise Details`;
+        }
+
+        function toggleSession(element, event) {
+            event.stopPropagation();
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.toggle-icon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
         }
 
         function toggleSection(element) {
