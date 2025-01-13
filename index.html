@@ -706,14 +706,7 @@
                                                 </div>
                                             </div>
                                         ` : ''}
-                                        <div class="exercise-info">
-                                            <button class="toggle-description" onclick="toggleExerciseDetails(this, event)">
-                                                <i class="fas fa-info-circle"></i> Show Exercise Details
-                                            </button>
-                                            <div class="exercise-description">
-                                                ${createExerciseInfoHTML(session)}
-                                            </div>
-                                        </div>
+                                        ${createExerciseInfoHTML(session)}
                                     </div>
                                 `).join('')}
                             </div>
