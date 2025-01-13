@@ -1,13 +1,38 @@
 from flask import Flask, send_file, send_from_directory, jsonify
 import re
+import json
 from pathlib import Path
 import os
 
 app = Flask(__name__)
 
+def parse_session_structure(content):
+    structure = []
+    current_section = None
+    
+    for line in content.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith(('1.', '2.', '3.')):  # Main section
+            if current_section:
+                structure.append(current_section)
+            current_section = {
+                'name': line.split(':', 1)[1].strip() if ':' in line else line[3:].strip(),
+                'duration': line.split('(')[1].split(')')[0] if '(' in line else None,
+                'items': []
+            }
+        elif line.startswith('-') and current_section:  # Sub-items
+            current_section['items'].append(line[1:].strip())
+            
+    if current_section:
+        structure.append(current_section)
+        
+    return structure
+
 def parse_training_week(week_content):
     days = []
-    current_day = None
     
     # Split into days
     day_pattern = r'\*\*(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), ([A-Za-z]+ \d+)\*\*\n(.*?)(?=\*\*|$)'
@@ -22,25 +47,77 @@ def parse_training_week(week_content):
         
         # Extract sessions
         sessions = []
-        session_pattern = r'- ([^*\n]+?)(?=\n\s*[*-]|\n\n|$)'
-        session_matches = re.finditer(session_pattern, content)
+        lines = [line.rstrip() for line in content.split('\n')]
+        i = 0
         
-        for s_match in session_matches:
-            session_name = s_match.group(1).strip()
-            if session_name and not session_name.startswith("Run streak"):  # Skip run streak entries
-                session_details = {}
-                session_details['name'] = session_name
+        while i < len(lines):
+            line = lines[i]
+            
+            if line.startswith('- '):  # Main session
+                session = {'name': line[2:].strip(), 'details': [], 'structure': []}
+                i += 1
                 
-                # Try to extract duration and location if available
-                duration_match = re.search(r'Duration: (\d+)', content[s_match.start():])
-                location_match = re.search(r'Location: ([^\n]+)', content[s_match.start():])
+                # Collect session details until next main session or end
+                while i < len(lines):
+                    line = lines[i]
+                    
+                    # Skip empty lines
+                    if not line.strip():
+                        i += 1
+                        continue
+                    
+                    # Break if we hit next main session
+                    if line.startswith('- ') and not line.startswith('       -'):
+                        break
+                    
+                    # Parse session details
+                    if line.startswith('  * '):
+                        detail = line[4:].strip()
+                        if 'Duration:' in detail:
+                            duration_match = re.search(r'Duration: ~?(\d+)', detail)
+                            if duration_match:
+                                session['duration'] = duration_match.group(1)
+                        elif 'Session structure:' in detail:
+                            i += 1
+                            # Parse structure sections
+                            current_section = None
+                            while i < len(lines):
+                                line = lines[i]
+                                
+                                # Break if we hit next main session
+                                if line.startswith('- ') and not line.startswith('       -'):
+                                    break
+                                
+                                # Parse section header
+                                if line.lstrip().startswith(('1.', '2.', '3.')):
+                                    section_match = re.match(r'\s*\d+\.\s*(.*?)\s*\((\d+)\s*min\):', line)
+                                    if section_match:
+                                        name, duration = section_match.groups()
+                                        current_section = {
+                                            'name': name.strip(),
+                                            'duration': duration,
+                                            'items': []
+                                        }
+                                        session['structure'].append(current_section)
+                                
+                                # Parse section items
+                                elif line.startswith('       -') and current_section:
+                                    item = line[9:].strip()
+                                    current_section['items'].append(item)
+                                
+                                i += 1
+                                if i >= len(lines):
+                                    break
+                            
+                            # Back up one to not skip next session
+                            i -= 1
+                        else:
+                            session['details'].append(detail)
+                    i += 1
                 
-                if duration_match:
-                    session_details['duration'] = duration_match.group(1)
-                if location_match:
-                    session_details['location'] = location_match.group(1).strip()
-                
-                sessions.append(session_details)
+                sessions.append(session)
+                continue
+            i += 1
         
         day_data = {
             'day': day_name,
@@ -105,16 +182,22 @@ def serve_file(filename):
 @app.route('/api/training/<month>')
 def get_training_data(month):
     try:
-        file_path = Path(f'{month}_2025.md')
-        if not file_path.exists():
-            return jsonify({'error': f'File not found: {file_path}'}), 404
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
+        file_path = os.path.join('planning', f'{month}_2025.md')
+        with open(file_path, 'r') as f:
             content = f.read()
-            return content, 200, {'Content-Type': 'text/markdown'}
             
+        # Parse the content
+        weeks = parse_training_file(file_path)
+        
+        # Debug: Print the JSON structure for the first day's sessions
+        if weeks and weeks[0]['days']:
+            print("\nDEBUG: First day's sessions:")
+            print(json.dumps(weeks[0]['days'][0]['sessions'], indent=2))
+            
+        return jsonify(weeks)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(port=8080, debug=True)

@@ -431,6 +431,78 @@
             display: block;
         }
 
+        .session-structure {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .structure-sections {
+            margin-left: 10px;
+        }
+
+        .structure-section {
+            margin: 15px 0;
+            padding-left: 15px;
+            border-left: 2px solid #e9ecef;
+        }
+
+        .section-header {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .section-duration {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .section-content {
+            padding-left: 25px;
+            margin-top: 8px;
+        }
+
+        .section-item {
+            margin: 6px 0;
+            color: #576574;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-item i {
+            color: #95a5a6;
+            font-size: 0.8em;
+        }
+
+        .session-duration {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .session-detail {
+            margin: 5px 0;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {
                 transform: translateY(0);
@@ -728,16 +800,82 @@
             }
         };
 
+        function createStructureSectionHTML(section) {
+            return `
+                <div class="structure-section">
+                    <div class="section-header">
+                        <span class="section-title">${section.name}</span>
+                        ${section.duration ? `<span class="section-duration">(${section.duration} min)</span>` : ''}
+                    </div>
+                    <div class="section-items">
+                        ${section.items.map(item => `<div class="section-item">- ${item}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createSessionHTML(session) {
+            const details = session.details.map(detail => `
+                <div class="session-detail">${detail}</div>
+            `).join('');
+
+            const structure = session.structure && session.structure.length > 0 ? `
+                <div class="session-structure">
+                    ${session.structure.map(section => `
+                        <div class="structure-section">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-tasks"></i>
+                                    ${section.name}
+                                    ${section.duration ? `
+                                        <span class="section-duration">
+                                            <i class="far fa-clock"></i> ${section.duration} min
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                ${section.items.map(item => `
+                                    <div class="section-item">
+                                        <i class="fas fa-chevron-right"></i> ${item}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '';
+
+            return `
+                <div class="session">
+                    <div class="session-main" onclick="toggleSession(this, event)">
+                        <div class="session-header">
+                            <div class="session-title">
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                                <i class="fas fa-flag"></i> ${session.name}
+                            </div>
+                            ${session.duration ? `
+                                <div class="session-duration">
+                                    <i class="far fa-clock"></i> ${session.duration} min
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="session-content">
+                        ${details}
+                        ${structure}
+                    </div>
+                </div>
+            `;
+        }
+
         function createWeekHTML(weekData, index) {
             const metrics = weekData.metrics;
             const animationDelay = index * 0.2;
             
-            // If title already has "Week", use it as is, otherwise add "Week"
-            const displayTitle = weekData.title.includes('Week') ? weekData.title : `Week ${weekData.title}`;
-            
             return `
                 <div class="week animate__animated animate__fadeInUp" style="animation-delay: ${animationDelay}s">
-                    <h2><i class="fas fa-calendar-week"></i> ${displayTitle}</h2>
+                    <h2><i class="fas fa-calendar-week"></i> Week ${weekData.title}</h2>
                     <div class="metrics">
                         <div class="metric-card">
                             <i class="fas fa-fire"></i>
@@ -766,55 +904,7 @@
                                 <i class="fas fa-chart-line"></i> ${getDayType(day.calories)}
                             </div>
                             <div class="sessions">
-                                ${day.sessions.map(session => `
-                                    <div class="session">
-                                        <div class="session-main" onclick="toggleSession(this, event)">
-                                            <div class="session-header">
-                                                <div class="session-title">
-                                                    <i class="fas fa-chevron-down toggle-icon"></i>
-                                                    <i class="fas fa-flag"></i> ${session.name}
-                                                </div>
-                                                <div class="session-duration">
-                                                    <i class="far fa-clock"></i> Total: ${session.duration} min
-                                                </div>
-                                            </div>
-                                            <div class="session-meta">
-                                                ${session.location ? `
-                                                    <div class="session-location">
-                                                        <i class="fas fa-map-marker-alt"></i> ${session.location}
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        <div class="session-content">
-                                            ${session.structure ? parseSessionStructure(session) : ''}
-                                            
-                                            ${session.equipment ? `
-                                                <div class="equipment-section">
-                                                    <div class="equipment-header" onclick="toggleSection(this)">
-                                                        <div class="subsection-title">
-                                                            <i class="fas fa-tools"></i> Equipment Required
-                                                            <i class="fas fa-chevron-down toggle-icon"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="section-content">
-                                                        <div class="equipment-grid">
-                                                            ${session.equipment.split(',').map(item => `
-                                                                <div class="equipment-item">
-                                                                    <i class="fas fa-check"></i>${item.trim()}
-                                                                </div>
-                                                            `).join('')}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ` : ''}
-                                            
-                                            <div class="exercise-details">
-                                                ${createExerciseInfoHTML(session)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
+                                ${day.sessions.map(session => createSessionHTML(session)).join('')}
                             </div>
                         </div>
                     `).join('')}
@@ -865,20 +955,18 @@
             
             contentDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading training plan...</div>';
             
-            // Load markdown file directly
-            fetch(`${month}_2025.md`)
+            // Use the API endpoint
+            fetch(`/api/training/${month}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    return response.text();
+                    return response.json();
                 })
-                .then(data => {
-                    console.log('Markdown data loaded:', data.substring(0, 200) + '...'); // Debug log
-                    const weeks = parseMarkdown(data);
+                .then(weeks => {
                     console.log('Parsed weeks:', weeks); // Debug log
                     if (weeks.length === 0) {
-                        throw new Error('No weeks parsed from the markdown file');
+                        throw new Error('No weeks found in the training data');
                     }
                     contentDiv.innerHTML = weeks.map((week, index) => createWeekHTML(week, index)).join('');
                 })
